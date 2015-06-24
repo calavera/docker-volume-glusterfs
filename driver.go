@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/calavera/dkvolume"
+	"github.com/calavera/docker-volume-glusterfs/rest"
 )
 
 type volume struct {
@@ -18,21 +19,47 @@ type volume struct {
 }
 
 type glusterfsDriver struct {
-	root    string
-	servers []string
-	volumes map[string]*volume
-	m       sync.Mutex
+	root       string
+	restClient *rest.Client
+	servers    []string
+	volumes    map[string]*volume
+	m          sync.Mutex
 }
 
-func newGlusterfsDriver(root string, servers []string) glusterfsDriver {
-	return glusterfsDriver{
+func newGlusterfsDriver(root, restAddress, gfsBase string, servers []string) glusterfsDriver {
+	d := glusterfsDriver{
 		root:    root,
 		servers: servers,
-		volumes: map[string]*volume{}}
+		volumes: map[string]*volume{},
+	}
+	if len(restAddress) > 0 {
+		d.restClient = rest.NewClient(restAddress, gfsBase)
+	}
+	return d
 }
 
 func (d glusterfsDriver) Create(r dkvolume.Request) dkvolume.Response {
 	log.Printf("Creating volume %s\n", r.Name)
+	d.m.Lock()
+	defer d.m.Unlock()
+	m := d.mountpoint(r.Name)
+
+	if _, ok := d.volumes[m]; ok {
+		return dkvolume.Response{}
+	}
+
+	if d.restClient != nil {
+		exist, err := d.restClient.VolumeExist(r.Name)
+		if err != nil {
+			return dkvolume.Response{Err: err.Error()}
+		}
+
+		if !exist {
+			if err := d.restClient.CreateVolume(r.Name, d.servers); err != nil {
+				return dkvolume.Response{Err: err.Error()}
+			}
+		}
+	}
 	return dkvolume.Response{}
 }
 
@@ -44,6 +71,11 @@ func (d glusterfsDriver) Remove(r dkvolume.Request) dkvolume.Response {
 
 	if s, ok := d.volumes[m]; ok {
 		if s.connections <= 1 {
+			if d.restClient != nil {
+				if err := d.restClient.StopVolume(r.Name); err != nil {
+					return dkvolume.Response{Err: err.Error()}
+				}
+			}
 			delete(d.volumes, m)
 		}
 	}

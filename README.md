@@ -32,6 +32,23 @@ See this video for a slightly longer usage explanation:
 
 https://youtu.be/SVtsT9WVujs
 
+### Volume creation on demand
+
+This extension can create volumes on the remote cluster if you install https://github.com/aravindavk/glusterfs-rest in one of the nodes of the cluster.
+
+You need to set two extra flags when you start the extension if you want to let containers to create their volumes on demand:
+
+- rest: is the URL address to the remote api.
+- gfs-base: is the base path where the volumes will be created.
+
+This is an example of the command line to start the plugin:
+
+```
+$ docker-volume-glusterfs -servers gfs-1:gfs2 \
+    -rest http://gfs-1:9000 -gfs-base /var/lib/gluster/volumes
+```
+
+These volumes are replicated among all the peers in the cluster that you specify in the `-servers` flag.
 
 ## LICENSE
 
