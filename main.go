@@ -18,6 +18,8 @@ const (
 var (
 	defaultDir  = filepath.Join(dkvolume.DefaultDockerRootDirectory, glusterfsId)
 	serversList = flag.String("servers", "", "List of glusterfs servers")
+	restAddress = flag.String("rest", "", "URL to glusterfsrest api")
+	gfsBase     = flag.String("gfs-base", "/mnt/gfs", "Base directory where volumes are created in the cluster")
 	root        = flag.String("root", defaultDir, "GlusterFS volumes root directory")
 )
 
@@ -35,7 +37,7 @@ func main() {
 
 	servers := strings.Split(*serversList, ":")
 
-	d := newGlusterfsDriver(*root, servers)
+	d := newGlusterfsDriver(*root, *restAddress, *gfsBase, servers)
 	h := dkvolume.NewHandler(d)
 	fmt.Printf("listening on %s\n", socketAddress)
 	fmt.Println(h.ServeUnix("root", socketAddress))
