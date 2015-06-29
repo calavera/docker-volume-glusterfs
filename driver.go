@@ -23,7 +23,7 @@ type glusterfsDriver struct {
 	restClient *rest.Client
 	servers    []string
 	volumes    map[string]*volume
-	m          sync.Mutex
+	m          *sync.Mutex
 }
 
 func newGlusterfsDriver(root, restAddress, gfsBase string, servers []string) glusterfsDriver {
@@ -31,6 +31,7 @@ func newGlusterfsDriver(root, restAddress, gfsBase string, servers []string) glu
 		root:    root,
 		servers: servers,
 		volumes: map[string]*volume{},
+		m:       &sync.Mutex{},
 	}
 	if len(restAddress) > 0 {
 		d.restClient = rest.NewClient(restAddress, gfsBase)
