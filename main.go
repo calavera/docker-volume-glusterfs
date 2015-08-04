@@ -10,10 +10,7 @@ import (
 	"github.com/calavera/dkvolume"
 )
 
-const (
-	glusterfsId   = "_glusterfs"
-	socketAddress = "/usr/share/docker/plugins/glusterfs.sock"
-)
+const glusterfsId = "_glusterfs"
 
 var (
 	defaultDir  = filepath.Join(dkvolume.DefaultDockerRootDirectory, glusterfsId)
@@ -39,6 +36,5 @@ func main() {
 
 	d := newGlusterfsDriver(*root, *restAddress, *gfsBase, servers)
 	h := dkvolume.NewHandler(d)
-	fmt.Printf("listening on %s\n", socketAddress)
-	fmt.Println(h.ServeUnix("root", socketAddress))
+	fmt.Println(h.ServeUnix("root", "glusterfs"))
 }
