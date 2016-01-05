@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/calavera/dkvolume"
+	"github.com/docker/go-plugins-helpers/volume"
 )
 
 const glusterfsId = "_glusterfs"
 
 var (
-	defaultDir  = filepath.Join(dkvolume.DefaultDockerRootDirectory, glusterfsId)
+	defaultDir  = filepath.Join(volume.DefaultDockerRootDirectory, glusterfsId)
 	serversList = flag.String("servers", "", "List of glusterfs servers")
 	restAddress = flag.String("rest", "", "URL to glusterfsrest api")
 	gfsBase     = flag.String("gfs-base", "/mnt/gfs", "Base directory where volumes are created in the cluster")
@@ -35,6 +35,6 @@ func main() {
 	servers := strings.Split(*serversList, ":")
 
 	d := newGlusterfsDriver(*root, *restAddress, *gfsBase, servers)
-	h := dkvolume.NewHandler(d)
+	h := volume.NewHandler(d)
 	fmt.Println(h.ServeUnix("root", "glusterfs"))
 }
