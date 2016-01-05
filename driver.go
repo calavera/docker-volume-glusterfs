@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/calavera/dkvolume"
+	"github.com/docker/go-plugins-helpers/volume"
 	"github.com/calavera/docker-volume-glusterfs/rest"
 )
 
-type volume struct {
+type volume_name struct {
 	name        string
 	connections int
 }
@@ -22,7 +22,7 @@ type glusterfsDriver struct {
 	root       string
 	restClient *rest.Client
 	servers    []string
-	volumes    map[string]*volume
+	volumes    map[string]*volume_name
 	m          *sync.Mutex
 }
 
@@ -30,7 +30,7 @@ func newGlusterfsDriver(root, restAddress, gfsBase string, servers []string) glu
 	d := glusterfsDriver{
 		root:    root,
 		servers: servers,
-		volumes: map[string]*volume{},
+		volumes: map[string]*volume_name{},
 		m:       &sync.Mutex{},
 	}
 	if len(restAddress) > 0 {
@@ -39,32 +39,32 @@ func newGlusterfsDriver(root, restAddress, gfsBase string, servers []string) glu
 	return d
 }
 
-func (d glusterfsDriver) Create(r dkvolume.Request) dkvolume.Response {
+func (d glusterfsDriver) Create(r volume.Request) volume.Response {
 	log.Printf("Creating volume %s\n", r.Name)
 	d.m.Lock()
 	defer d.m.Unlock()
 	m := d.mountpoint(r.Name)
 
 	if _, ok := d.volumes[m]; ok {
-		return dkvolume.Response{}
+		return volume.Response{}
 	}
 
 	if d.restClient != nil {
 		exist, err := d.restClient.VolumeExist(r.Name)
 		if err != nil {
-			return dkvolume.Response{Err: err.Error()}
+			return volume.Response{Err: err.Error()}
 		}
 
 		if !exist {
 			if err := d.restClient.CreateVolume(r.Name, d.servers); err != nil {
-				return dkvolume.Response{Err: err.Error()}
+				return volume.Response{Err: err.Error()}
 			}
 		}
 	}
-	return dkvolume.Response{}
+	return volume.Response{}
 }
 
-func (d glusterfsDriver) Remove(r dkvolume.Request) dkvolume.Response {
+func (d glusterfsDriver) Remove(r dkvolume.Request) volume.Response {
 	log.Printf("Removing volume %s\n", r.Name)
 	d.m.Lock()
 	defer d.m.Unlock()
@@ -74,20 +74,20 @@ func (d glusterfsDriver) Remove(r dkvolume.Request) dkvolume.Response {
 		if s.connections <= 1 {
 			if d.restClient != nil {
 				if err := d.restClient.StopVolume(r.Name); err != nil {
-					return dkvolume.Response{Err: err.Error()}
+					return volume.Response{Err: err.Error()}
 				}
 			}
 			delete(d.volumes, m)
 		}
 	}
-	return dkvolume.Response{}
+	return volume.Response{}
 }
 
-func (d glusterfsDriver) Path(r dkvolume.Request) dkvolume.Response {
-	return dkvolume.Response{Mountpoint: d.mountpoint(r.Name)}
+func (d glusterfsDriver) Path(r volume.Request) volume.Response {
+	return volume.Response{Mountpoint: d.mountpoint(r.Name)}
 }
 
-func (d glusterfsDriver) Mount(r dkvolume.Request) dkvolume.Response {
+func (d glusterfsDriver) Mount(r volume.Request) volume.Response {
 	d.m.Lock()
 	defer d.m.Unlock()
 	m := d.mountpoint(r.Name)
@@ -96,33 +96,33 @@ func (d glusterfsDriver) Mount(r dkvolume.Request) dkvolume.Response {
 	s, ok := d.volumes[m]
 	if ok && s.connections > 0 {
 		s.connections++
-		return dkvolume.Response{Mountpoint: m}
+		return volume.Response{Mountpoint: m}
 	}
 
 	fi, err := os.Lstat(m)
 
 	if os.IsNotExist(err) {
 		if err := os.MkdirAll(m, 0755); err != nil {
-			return dkvolume.Response{Err: err.Error()}
+			return volume.Response{Err: err.Error()}
 		}
 	} else if err != nil {
-		return dkvolume.Response{Err: err.Error()}
+		return volume.Response{Err: err.Error()}
 	}
 
 	if fi != nil && !fi.IsDir() {
-		return dkvolume.Response{Err: fmt.Sprintf("%v already exist and it's not a directory", m)}
+		return volume.Response{Err: fmt.Sprintf("%v already exist and it's not a directory", m)}
 	}
 
 	if err := d.mountVolume(r.Name, m); err != nil {
-		return dkvolume.Response{Err: err.Error()}
+		return volume.Response{Err: err.Error()}
 	}
 
-	d.volumes[m] = &volume{name: r.Name, connections: 1}
+	d.volumes[m] = &volume_name{name: r.Name, connections: 1}
 
-	return dkvolume.Response{Mountpoint: m}
+	return volume.Response{Mountpoint: m}
 }
 
-func (d glusterfsDriver) Unmount(r dkvolume.Request) dkvolume.Response {
+func (d glusterfsDriver) Unmount(r volume.Request) volume.Response {
 	d.m.Lock()
 	defer d.m.Unlock()
 	m := d.mountpoint(r.Name)
@@ -131,15 +131,15 @@ func (d glusterfsDriver) Unmount(r dkvolume.Request) dkvolume.Response {
 	if s, ok := d.volumes[m]; ok {
 		if s.connections == 1 {
 			if err := d.unmountVolume(m); err != nil {
-				return dkvolume.Response{Err: err.Error()}
+				return volume.Response{Err: err.Error()}
 			}
 		}
 		s.connections--
 	} else {
-		return dkvolume.Response{Err: fmt.Sprintf("Unable to find volume mounted on %s", m)}
+		return volume.Response{Err: fmt.Sprintf("Unable to find volume mounted on %s", m)}
 	}
 
-	return dkvolume.Response{}
+	return volume.Response{}
 }
 
 func (d *glusterfsDriver) mountpoint(name string) string {
