@@ -64,7 +64,7 @@ func (d glusterfsDriver) Create(r volume.Request) volume.Response {
 	return volume.Response{}
 }
 
-func (d glusterfsDriver) Remove(r dkvolume.Request) volume.Response {
+func (d glusterfsDriver) Remove(r volume.Request) volume.Response {
 	log.Printf("Removing volume %s\n", r.Name)
 	d.m.Lock()
 	defer d.m.Unlock()
