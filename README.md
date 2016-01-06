@@ -2,6 +2,8 @@
 
 This plugin uses GlusterFS as distributed data storage for containers.
 
+[![TravisCI](https://travis-ci.org/calavera/docker-volume-glusterfs.svg)](https://travis-ci.org/calavera/docker-volume-glusterfs)
+
 ## Installation
 
 Using go (until we get proper binaries):
