@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 	"path/filepath"
 	"sync"
 	"github.com/docker/go-plugins-helpers/volume"
@@ -146,11 +147,11 @@ func (d *glusterfsDriver) mountpoint(name string) string {
 
 func (d *glusterfsDriver) mountVolume(name, destination string) error {
 
-	for index, server := range servers {
-		servers[index] = fmt.Sprintf("-s %s", server)
+	for index, server := range d.servers {
+		d.servers[index] = fmt.Sprintf("-s %s", server)
 	}
 
-	cmd := fmt.Sprintf("glusterfs --log-level=DEBUG --volfile-id=%s %s %s", name, strings.Join(servers[:]," "), destination)
+	cmd := fmt.Sprintf("glusterfs --log-level=DEBUG --volfile-id=%s %s %s", name, strings.Join(d.servers[:]," "), destination)
 	if out, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
 		log.Println(string(out))
 		return err
