@@ -146,12 +146,12 @@ func (d *glusterfsDriver) mountpoint(name string) string {
 }
 
 func (d *glusterfsDriver) mountVolume(name, destination string) error {
-
-	for index, server := range d.servers {
-		d.servers[index] = fmt.Sprintf("-s %s", server)
+	var server_nodes []string
+	for _, server := range d.servers {
+		server_nodes = append(server_nodes, fmt.Sprintf("-s %s", server))
 	}
 
-	cmd := fmt.Sprintf("glusterfs --log-level=DEBUG --volfile-id=%s %s %s", name, strings.Join(d.servers[:]," "), destination)
+	cmd := fmt.Sprintf("glusterfs --log-level=DEBUG --volfile-id=%s %s %s", name, strings.Join(server_nodes[:]," "), destination)
 	if out, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
 		log.Println(string(out))
 		return err
