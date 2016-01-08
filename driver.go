@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/docker/go-plugins-helpers/volume"
 	"github.com/calavera/docker-volume-glusterfs/rest"
+	"github.com/docker/go-plugins-helpers/volume"
 )
 
-type volume_name struct {
+type volumeName struct {
 	name        string
 	connections int
 }
@@ -22,7 +22,7 @@ type glusterfsDriver struct {
 	root       string
 	restClient *rest.Client
 	servers    []string
-	volumes    map[string]*volume_name
+	volumes    map[string]*volumeName
 	m          *sync.Mutex
 }
 
@@ -30,7 +30,7 @@ func newGlusterfsDriver(root, restAddress, gfsBase string, servers []string) glu
 	d := glusterfsDriver{
 		root:    root,
 		servers: servers,
-		volumes: map[string]*volume_name{},
+		volumes: map[string]*volumeName{},
 		m:       &sync.Mutex{},
 	}
 	if len(restAddress) > 0 {
@@ -117,7 +117,7 @@ func (d glusterfsDriver) Mount(r volume.Request) volume.Response {
 		return volume.Response{Err: err.Error()}
 	}
 
-	d.volumes[m] = &volume_name{name: r.Name, connections: 1}
+	d.volumes[m] = &volumeName{name: r.Name, connections: 1}
 
 	return volume.Response{Mountpoint: m}
 }
