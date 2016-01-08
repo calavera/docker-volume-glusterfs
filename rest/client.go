@@ -40,12 +40,12 @@ type response struct {
 }
 
 type peerResponse struct {
-	Data []peer `json:"data",omitempty`
+	Data []peer `json:"data,omitempty"`
 	response
 }
 
 type volumeResponse struct {
-	Data []volume `json:"data",omitempty`
+	Data []volume `json:"data,omitempty"`
 	response
 }
 
