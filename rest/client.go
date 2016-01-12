@@ -17,14 +17,14 @@ const (
 )
 
 type peer struct {
-	Id     string `json:"id"`
+	ID     string `json:"id"`
 	Name   string `json:"name"`
 	Status string `json:"status"`
 }
 
 type volume struct {
 	Name       string `json:"name"`
-	Uuid       string `json:"uuid"`
+	UUID       string `json:"uuid"`
 	Type       string `json:"type"`
 	Status     string `json:"status"`
 	NumBricks  int    `json:"num_bricks"`
@@ -40,24 +40,27 @@ type response struct {
 }
 
 type peerResponse struct {
-	Data []peer `json:"data",omitempty`
+	Data []peer `json:"data,omitempty"`
 	response
 }
 
 type volumeResponse struct {
-	Data []volume `json:"data",omitempty`
+	Data []volume `json:"data,omitempty"`
 	response
 }
 
+// Client is the http client that sends requests to the gluster API.
 type Client struct {
 	addr string
 	base string
 }
 
+// NewClient initializes a new client.
 func NewClient(addr, base string) *Client {
 	return &Client{addr, base}
 }
 
+// VolumeExist returns whether a volume exist in the cluster with a given name or not.
 func (r Client) VolumeExist(name string) (bool, error) {
 	vols, err := r.volumes()
 	if err != nil {
@@ -92,6 +95,7 @@ func (r Client) volumes() ([]volume, error) {
 	return d.Data, nil
 }
 
+// CreateVolume creates a new volume with the given name in the cluster.
 func (r Client) CreateVolume(name string, peers []string) error {
 	u := fmt.Sprintf("%s%s", r.addr, fmt.Sprintf(volumeCreatePath, name))
 	fmt.Println(u)
@@ -117,6 +121,7 @@ func (r Client) CreateVolume(name string, peers []string) error {
 	return responseCheck(resp)
 }
 
+// StopVolume stops the volume with the given name in the cluster.
 func (r Client) StopVolume(name string) error {
 	u := fmt.Sprintf("%s%s", r.addr, fmt.Sprintf(volumeStopPath, name))
 
