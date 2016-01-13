@@ -2,15 +2,14 @@ package main
 
 import (
 	"fmt"
+	"github.com/calavera/docker-volume-glusterfs/rest"
+	"github.com/docker/go-plugins-helpers/volume"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
-
-	"github.com/calavera/docker-volume-glusterfs/rest"
-	"github.com/docker/go-plugins-helpers/volume"
 )
 
 type volumeName struct {
