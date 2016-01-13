@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
+	"github.com/calavera/docker-volume-glusterfs/rest"
+	"github.com/docker/go-plugins-helpers/volume"
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 	"path/filepath"
+	"strings"
 	"sync"
-	"github.com/calavera/docker-volume-glusterfs/rest"
-	"github.com/docker/go-plugins-helpers/volume"
 )
 
 type volumeName struct {
@@ -151,7 +151,7 @@ func (d *glusterfsDriver) mountVolume(name, destination string) error {
 		serverNodes = append(serverNodes, fmt.Sprintf("-s %s", server))
 	}
 
-	cmd := fmt.Sprintf("glusterfs --log-level=DEBUG --volfile-id=%s %s %s", name, strings.Join(serverNodes[:]," "), destination)
+	cmd := fmt.Sprintf("glusterfs --log-level=DEBUG --volfile-id=%s %s %s", name, strings.Join(serverNodes[:], " "), destination)
 	if out, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
 		log.Println(string(out))
 		return err
