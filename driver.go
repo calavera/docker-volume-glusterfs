@@ -87,7 +87,7 @@ func (d glusterfsDriver) Path(r volume.Request) volume.Response {
 	return volume.Response{Mountpoint: d.mountpoint(r.Name)}
 }
 
-func (d glusterfsDriver) Mount(r volume.Request) volume.Response {
+func (d glusterfsDriver) Mount(r volume.MountRequest) volume.Response {
 	d.m.Lock()
 	defer d.m.Unlock()
 	m := d.mountpoint(r.Name)
@@ -122,7 +122,7 @@ func (d glusterfsDriver) Mount(r volume.Request) volume.Response {
 	return volume.Response{Mountpoint: m}
 }
 
-func (d glusterfsDriver) Unmount(r volume.Request) volume.Response {
+func (d glusterfsDriver) Unmount(r volume.UnmountRequest) volume.Response {
 	d.m.Lock()
 	defer d.m.Unlock()
 	m := d.mountpoint(r.Name)
@@ -191,7 +191,7 @@ func (d *glusterfsDriver) unmountVolume(target string) error {
 }
 
 func (d glusterfsDriver) Capabilities(r volume.Request) volume.Response {
-    var res volume.Response
-    res.Capabilities = volume.Capability{Scope: "local"}
-    return res
+	var res volume.Response
+	res.Capabilities = volume.Capability{Scope: "local"}
+	return res
 }
